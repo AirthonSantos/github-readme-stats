@@ -19,8 +19,14 @@ import { isLocaleAvailable } from "../src/translations.js";
 
 // @ts-ignore
 export default async (req, res) => {
+  const ALLOWED_USERNAME = process.env.ALLOWED_USERNAME;
+  const { username } = req.query;
+
+  if (username !== ALLOWED_USERNAME) {
+    return res.status(403).send("Forbidden");
+  }
+
   const {
-    username,
     hide,
     hide_title,
     hide_border,
@@ -49,6 +55,7 @@ export default async (req, res) => {
     rank_icon,
     show,
   } = req.query;
+
   res.setHeader("Content-Type", "image/svg+xml");
 
   const access = guardAccess({
@@ -63,6 +70,7 @@ export default async (req, res) => {
       theme,
     },
   });
+
   if (!access.isPassed) {
     return access.result;
   }
@@ -89,12 +97,12 @@ export default async (req, res) => {
       username,
       parseBoolean(include_all_commits),
       parseArray(exclude_repo),
-      showStats.includes("prs_merged") ||
-        showStats.includes("prs_merged_percentage"),
+      showStats.includes("prs_merged") || showStats.includes("prs_merged_percentage"),
       showStats.includes("discussions_started"),
       showStats.includes("discussions_answered"),
       parseInt(commits_year, 10),
     );
+
     const cacheSeconds = resolveCacheSeconds({
       requested: parseInt(cache_seconds, 10),
       def: CACHE_TTL.STATS_CARD.DEFAULT,
